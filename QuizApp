@@ -1,0 +1,106 @@
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class QuizApp {
+
+    static class Question {
+        String question;
+        String[] options;
+        int correctAnswer; // index of the correct answer (0-based)
+
+        Question(String question, String[] options, int correctAnswer) {
+            this.question = question;
+            this.options = options;
+            this.correctAnswer = correctAnswer;
+        }
+    }
+
+    static class Quiz {
+        ArrayList<Question> questions;
+        int score;
+
+        Quiz() {
+            questions = new ArrayList<>();
+            score = 0;
+        }
+
+        void addQuestion(Question question) {
+            questions.add(question);
+        }
+
+        void start() {
+            Scanner scanner = new Scanner(System.in);
+
+            for (int i = 0; i < questions.size(); i++) {
+                Question question = questions.get(i);
+                System.out.println("Question " + (i + 1) + ": " + question.question);
+
+                for (int j = 0; j < question.options.length; j++) {
+                    System.out.println((j + 1) + ". " + question.options[j]);
+                }
+
+                System.out.println("You have 10 seconds to answer...");
+                Timer timer = new Timer();
+                boolean[] timeUp = {false};
+
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        timeUp[0] = true;
+                        System.out.println("\nTime is up! Moving to the next question...");
+                        timer.cancel();
+                    }
+                }, 10000);
+
+                int userAnswer = -1;
+
+                // Wait for user input or timeout
+                while (!timeUp[0]) {
+                    try {
+                        if (System.in.available() > 0) {
+                            userAnswer = Integer.parseInt(scanner.nextLine()) - 1;
+                            timer.cancel();
+                            break;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Invalid input! Please enter a number.");
+                    }
+                }
+
+                if (userAnswer == question.correctAnswer) {
+                    System.out.println("Correct!");
+                    score++;
+                } else if (!timeUp[0]) {
+                    System.out.println("Incorrect. The correct answer was: " + question.options[question.correctAnswer]);
+                }
+                System.out.println();
+            }
+
+            scanner.close();
+            displayResult();
+        }
+
+        void displayResult() {
+            System.out.println("Quiz Complete!");
+            System.out.println("Your score: " + score + "/" + questions.size());
+            System.out.println("Thank you for playing!");
+        }
+    }
+
+    public static void main(String[] args) {
+        Quiz quiz = new Quiz();
+
+        // Adding sample questions
+        quiz.addQuestion(new Question("What is the capital of France?",
+                new String[]{"Paris", "London", "Berlin", "Madrid"}, 0));
+        quiz.addQuestion(new Question("What is 5 + 3?",
+                new String[]{"5", "8", "12", "15"}, 1));
+        quiz.addQuestion(new Question("Which planet is known as the Red Planet?",
+                new String[]{"Earth", "Venus", "Mars", "Jupiter"}, 2));
+
+        // Starting the quiz
+        quiz.start();
+    }
+}
